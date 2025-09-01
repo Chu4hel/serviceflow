@@ -14,7 +14,7 @@ from app.schemas import serviceflow as schemas
 
 router = APIRouter()
 
-@router.get("/services", response_model=List[schemas.Service])
+@router.get("/services", response_model=List[schemas.Service], summary="Получение списка публичных услуг")
 async def read_public_services(
     project: Project = Depends(get_project_by_api_key),
     db: AsyncSession = Depends(get_db),

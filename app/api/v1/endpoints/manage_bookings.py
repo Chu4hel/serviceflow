@@ -14,7 +14,7 @@ from app.schemas import serviceflow as schemas
 
 router = APIRouter()
 
-@router.get("/projects/{project_id}/bookings", response_model=List[schemas.Booking])
+@router.get("/projects/{project_id}/bookings", response_model=List[schemas.Booking], summary="Получение списка бронирований проекта")
 async def read_project_bookings(
     project_id: int,
     db: AsyncSession = Depends(get_db),
@@ -24,5 +24,5 @@ async def read_project_bookings(
 ):
     project = await crud_project.get_project(db, project_id)
     if not project or project.user_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Project not found or access denied")
+        raise HTTPException(status_code=404, detail="Проект не найден или доступ запрещен")
     return await crud_booking.get_bookings(db, project_id=project_id, skip=skip, limit=limit)

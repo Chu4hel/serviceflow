@@ -13,7 +13,7 @@ from app.schemas import serviceflow as schemas
 
 router = APIRouter()
 
-@router.post("/bookings", response_model=schemas.Booking, status_code=201)
+@router.post("/bookings", response_model=schemas.Booking, status_code=201, summary="Создание нового бронирования")
 async def create_public_booking(
     booking: schemas.BookingCreate,
     project: Project = Depends(get_project_by_api_key),

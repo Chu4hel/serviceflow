@@ -96,6 +96,7 @@ class ProjectCreate(ProjectBase):
     pass
 
 class Project(ProjectBase):
+    model_config = ConfigDict(from_attributes=True, title="Проект (модель ответа)")
     id: int
     user_id: int
     api_key: str

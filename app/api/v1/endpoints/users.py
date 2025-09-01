@@ -10,12 +10,12 @@ from app.schemas import serviceflow as schemas
 
 router = APIRouter()
 
-@router.post("/users", response_model=schemas.User, status_code=201)
+@router.post("/users", response_model=schemas.User, status_code=201, summary="Регистрация нового пользователя")
 async def create_user_registration(
     user: schemas.UserCreate,
     db: AsyncSession = Depends(get_db)
 ):
     db_user = await crud_user.get_user_by_email(db, email=user.email)
     if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Пользователь с таким email уже зарегистрирован")
     return await crud_user.create_user(db=db, user=user)

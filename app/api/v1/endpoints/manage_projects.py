@@ -23,7 +23,7 @@ async def create_user_project(
     return await crud_project.create_project(db=db, user_id=current_user.id, project=project)
 
 
-@router.get("/projects", response_model=List[schemas.Project])
+@router.get("/projects", response_model=List[schemas.Project], summary="Получение списка проектов пользователя")
 async def read_user_projects(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),

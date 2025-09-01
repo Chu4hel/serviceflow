@@ -13,7 +13,7 @@ from app.schemas import serviceflow as schemas
 
 router = APIRouter()
 
-@router.post("/subscribers", response_model=schemas.Subscriber, status_code=201)
+@router.post("/subscribers", response_model=schemas.Subscriber, status_code=201, summary="Создание нового подписчика")
 async def create_public_subscriber(
     subscriber: schemas.SubscriberCreate,
     project: Project = Depends(get_project_by_api_key),
