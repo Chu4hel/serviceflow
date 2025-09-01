@@ -8,7 +8,8 @@
     5432
   ],
   "remoteUser": "vscode",
-  "postCreateCommand": "poetry install --no-interaction --no-ansi --no-root",
+  "postStartCommand": "bash /entrypoint.sh poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+  
   "customizations": {
     "jetbrains": {
       "backend": "PyCharm"
