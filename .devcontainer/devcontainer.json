@@ -1,0 +1,27 @@
+{
+  "name": "ServiceFlow API Dev Container",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "api",
+  "workspaceFolder": "/app",
+  "forwardPorts": [
+    8000,
+    5432
+  ],
+  "remoteUser": "vscode",
+  "postCreateCommand": "poetry install --no-interaction --no-ansi --no-root",
+  "customizations": {
+    "jetbrains": {
+      "backend": "PyCharm"
+    },
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  }
+}

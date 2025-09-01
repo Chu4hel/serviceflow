@@ -1,0 +1,37 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    container_name: ServiceFlow_api
+    command: poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ../app:/app/app
+    env_file:
+      - ../.env
+    depends_on:
+      - db
+    networks:
+      - ServiceFlow_network
+    ports:
+      - "8000:8000"
+
+  db:
+    image: postgres:14-alpine
+    container_name: ServiceFlow_db
+    restart: unless-stopped
+    volumes:
+      - ServiceFlow_postgres_data:/var/lib/postgresql/data
+    env_file:
+      - ../.env
+    ports:
+      - "5432:5432"
+    networks:
+      - ServiceFlow_network
+
+volumes:
+  ServiceFlow_postgres_data:
+
+networks:
+  ServiceFlow_network:
+    driver: bridge
