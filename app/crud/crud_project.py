@@ -1,5 +1,8 @@
 """
 CRUD-операции для модели Project.
+
+Эти функции выполняют только базовые операции с базой данных (создание, чтение,
+обновление, удаление) и не содержат никакой бизнес-логики или проверок прав доступа.
 """
 from typing import List, Optional
 import uuid
@@ -12,45 +15,31 @@ from app import models
 from app import schemas
 
 
-async def get_project(
-        db: AsyncSession, project_id: int, current_user: models.User
-) -> Optional[models.Project]:
-    """
-    Получает проект по ID с проверкой прав доступа.
-    Суперпользователь может получить любой проект.
-    Обычный пользователь - только свой.
-    """
+async def get_project(db: AsyncSession, project_id: int) -> Optional[models.Project]:
+    """Получает проект по ID со всеми связанными данными."""
     query = select(models.Project).options(
         selectinload(models.Project.user),
         selectinload(models.Project.services),
         selectinload(models.Project.bookings),
         selectinload(models.Project.subscribers)
     ).where(models.Project.id == project_id)
-
-    if not current_user.is_superuser:
-        query = query.where(models.Project.user_id == current_user.id)
-
     result = await db.execute(query)
     return result.scalars().first()
 
 
 async def get_project_by_name(
-        db: AsyncSession, name: str, current_user: models.User
+        db: AsyncSession, name: str, user_id: Optional[int] = None
 ) -> Optional[models.Project]:
-    """
-    Получает проект по имени с учетом текущего пользователя.
-    Суперпользователь может искать среди всех проектов.
-    Обычный пользователь - только среди своих.
-    """
+    """Получает проект по имени. Если указан user_id, ищет только среди проектов этого пользователя."""
     query = select(models.Project).where(models.Project.name == name)
-    if not current_user.is_superuser:
-        query = query.where(models.Project.user_id == current_user.id)
-
+    if user_id:
+        query = query.where(models.Project.user_id == user_id)
     result = await db.execute(query)
     return result.scalars().first()
 
 
 async def get_project_by_apikey(db: AsyncSession, api_key: str) -> Optional[models.Project]:
+    """Получает проект по его API-ключу."""
     result = await db.execute(
         select(models.Project).where(models.Project.api_key == api_key)
     )
@@ -58,22 +47,17 @@ async def get_project_by_apikey(db: AsyncSession, api_key: str) -> Optional[mode
 
 
 async def get_projects(
-        db: AsyncSession, current_user: models.User, skip: int = 0, limit: int = 100
+        db: AsyncSession, user_id: Optional[int] = None, skip: int = 0, limit: int = 100
 ) -> List[models.Project]:
-    """
-    Получает список проектов с учетом прав доступа.
-    Суперпользователь получает все проекты.
-    Обычный пользователь - только свои.
-    """
+    """Получает список проектов. Если указан user_id, возвращает проекты только этого пользователя."""
     query = select(models.Project).options(
         selectinload(models.Project.user),
         selectinload(models.Project.services),
         selectinload(models.Project.bookings),
         selectinload(models.Project.subscribers)
     )
-
-    if not current_user.is_superuser:
-        query = query.where(models.Project.user_id == current_user.id)
+    if user_id:
+        query = query.where(models.Project.user_id == user_id)
 
     query = query.offset(skip).limit(limit)
     result = await db.execute(query)
@@ -81,6 +65,7 @@ async def get_projects(
 
 
 async def create_project(db: AsyncSession, user_id: int, project_in: schemas.ProjectCreate) -> models.Project:
+    """Создает новый проект для указанного пользователя."""
     api_key = str(uuid.uuid4())
     db_project = models.Project(
         **project_in.model_dump(),
@@ -90,7 +75,7 @@ async def create_project(db: AsyncSession, user_id: int, project_in: schemas.Pro
     db.add(db_project)
     await db.commit()
 
-    # Повторно извлекаем объект с "жадной" загрузкой всех необходимых связей
+    # Повторно извлекаем объект для загрузки связей
     result = await db.execute(
         select(models.Project).options(
             selectinload(models.Project.user),
@@ -105,7 +90,7 @@ async def create_project(db: AsyncSession, user_id: int, project_in: schemas.Pro
 async def update_project(
         db: AsyncSession, db_obj: models.Project, obj_in: schemas.ProjectUpdate
 ) -> models.Project:
-    """Обновляет проект в базе данных."""
+    """Обновляет данные проекта в базе данных."""
     update_data = obj_in.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_obj, field, value)

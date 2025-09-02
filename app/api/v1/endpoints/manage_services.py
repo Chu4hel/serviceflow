@@ -1,6 +1,5 @@
 """
 Management API: Эндпоинты для управления услугами.
-Требуют JWT аутентификации.
 """
 from typing import List
 
@@ -10,7 +9,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies import get_current_active_user
-from app.crud import crud_service, crud_project
+from app.services.service_service import ServiceService
 from app.db.session import get_db
 from app import models
 from app import schemas
@@ -32,28 +31,23 @@ router = APIRouter()
 )
 async def create_project_service(
         project_id: int,
-        service: schemas.ServiceCreate,
+        service_in: schemas.ServiceCreate,
         db: AsyncSession = Depends(get_db),
         current_user: models.User = Depends(get_current_active_user),
         allow_duplicates: bool = False
 ):
-    """
-    Создает новую услугу или возвращает существующую, если имя совпадает.
-    Доступно только владельцу проекта.
-    """
-    # Проверяем, что у пользователя есть доступ к проекту
-    project = await crud_project.get_project(db, project_id=project_id, current_user=current_user)
-    if not project:
+    service_service = ServiceService(db)
+    original_name = service_in.name
+    service = await service_service.create_service_for_user(
+        project_id=project_id, service_in=service_in, current_user=current_user, allow_duplicates=allow_duplicates
+    )
+    if not service:
         raise HTTPException(status_code=404, detail="Проект не найден или доступ запрещен")
 
-    if not allow_duplicates:
-        existing_service = await crud_service.get_service_by_name_and_project(
-            db, project_id=project_id, name=service.name, current_user=current_user
-        )
-        if existing_service:
-            return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder(existing_service))
+    if service.name == original_name and not allow_duplicates:
+        return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder(service))
 
-    return await crud_service.create_service(db=db, project_id=project_id, service=service)
+    return service
 
 
 @router.get("/projects/{project_id}/services", response_model=List[schemas.Service],
@@ -65,14 +59,12 @@ async def read_project_services(
         skip: int = 0,
         limit: int = 100
 ):
-    # crud_service.get_services теперь сам проверяет права доступа
-    services = await crud_service.get_services(db, project_id=project_id, current_user=current_user, skip=skip,
-                                               limit=limit)
-    # Дополнительная проверка, если get_services вернет пустой список, потому что проекта нет
-    if not services:
-        project = await crud_project.get_project(db, project_id=project_id, current_user=current_user)
-        if not project:
-            raise HTTPException(status_code=404, detail="Проект не найден или доступ запрещен")
+    service_service = ServiceService(db)
+    services = await service_service.get_services_for_user(
+        project_id=project_id, current_user=current_user, skip=skip, limit=limit
+    )
+    if services is None:  # Сервис возвращает None если проекта нет или нет доступа
+        raise HTTPException(status_code=404, detail="Проект не найден или доступ запрещен")
     return services
 
 
@@ -84,10 +76,16 @@ async def read_project_service(
         db: AsyncSession = Depends(get_db),
         current_user: models.User = Depends(get_current_active_user),
 ):
-    service = await crud_service.get_service(db, service_id=service_id, current_user=current_user)
+    service_service = ServiceService(db)
+    service = await service_service.get_service_for_user(service_id=service_id, current_user=current_user)
     if not service or service.project_id != project_id:
         raise HTTPException(status_code=404, detail="Услуга не найдена или не принадлежит указанному проекту")
 
+    return service
+    service_service = ServiceService(db)
+    service = await service_service.get_service_for_user(service_id=service_id, current_user=current_user)
+    if not service:
+        raise HTTPException(status_code=404, detail="Услуга не найдена или не принадлежит указанному проекту")
     return service
 
 
@@ -99,25 +97,24 @@ async def update_project_service(
         db: AsyncSession = Depends(get_db),
         current_user: models.User = Depends(get_current_active_user),
 ):
-    service = await crud_service.get_service(db, service_id=service_id, current_user=current_user)
-    if not service or service.project_id != project_id:
+    service_service = ServiceService(db)
+    service = await service_service.update_service_for_user(
+        service_id=service_id, service_in=service_in, current_user=current_user
+    )
+    if not service:
         raise HTTPException(status_code=404, detail="Услуга не найдена или не принадлежит указанному проекту")
-
-    updated_service = await crud_service.update_service(db=db, db_obj=service, obj_in=service_in)
-    return updated_service
+    return service
 
 
 @router.delete("/projects/{project_id}/services/{service_id}", status_code=status.HTTP_204_NO_CONTENT,
                summary="Удаление услуги")
 async def delete_project_service(
-        project_id: int,
         service_id: int,
         db: AsyncSession = Depends(get_db),
         current_user: models.User = Depends(get_current_active_user),
 ):
-    service = await crud_service.get_service(db, service_id=service_id, current_user=current_user)
-    if not service or service.project_id != project_id:
+    service_service = ServiceService(db)
+    success = await service_service.delete_service_for_user(service_id=service_id, current_user=current_user)
+    if not success:
         raise HTTPException(status_code=404, detail="Услуга не найдена или не принадлежит указанному проекту")
-
-    await crud_service.delete_service(db=db, db_obj=service)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
