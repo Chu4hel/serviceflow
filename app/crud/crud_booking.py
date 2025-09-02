@@ -13,18 +13,17 @@ from app.schemas import serviceflow as schemas
 
 
 async def get_booking(
-        db: AsyncSession, booking_id: int, current_user: models.User
+        db: AsyncSession, booking_id: int, current_user: Optional[models.User] = None
 ) -> Optional[models.Booking]:
     """
-    Получает бронирование по ID с проверкой прав доступа.
-    Суперпользователь может получить любое бронирование.
-    Обычный пользователь - только бронирование в рамках своего проекта.
+    Получает бронирование по ID.
+    Если передан current_user, проверяет права доступа.
     """
     query = select(models.Booking).options(
         selectinload(models.Booking.service)
     ).where(models.Booking.id == booking_id)
 
-    if not current_user.is_superuser:
+    if current_user and not current_user.is_superuser:
         query = query.join(models.Project).where(models.Project.user_id == current_user.id)
 
     result = await db.execute(query)
@@ -32,10 +31,12 @@ async def get_booking(
 
 
 async def get_booking_by_service_and_time(
-        db: AsyncSession, project_id: int, service_id: int, booking_time: datetime, current_user: models.User
+        db: AsyncSession, project_id: int, service_id: int, booking_time: datetime,
+        current_user: Optional[models.User] = None
 ) -> Optional[models.Booking]:
     """
-    Ищет бронирование по ID сервиса и времени в рамках одного проекта с проверкой прав.
+    Ищет бронирование по ID сервиса и времени в рамках одного проекта.
+    Если передан current_user, проверяет права доступа.
     """
     query = select(models.Booking).where(
         models.Booking.project_id == project_id,
@@ -43,7 +44,7 @@ async def get_booking_by_service_and_time(
         models.Booking.booking_time == booking_time
     )
 
-    if not current_user.is_superuser:
+    if current_user and not current_user.is_superuser:
         query = query.join(models.Project).where(models.Project.user_id == current_user.id)
 
     result = await db.execute(query)

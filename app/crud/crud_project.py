@@ -65,7 +65,12 @@ async def get_projects(
     Суперпользователь получает все проекты.
     Обычный пользователь - только свои.
     """
-    query = select(models.Project)
+    query = select(models.Project).options(
+        selectinload(models.Project.user),
+        selectinload(models.Project.services),
+        selectinload(models.Project.bookings),
+        selectinload(models.Project.subscribers)
+    )
 
     if not current_user.is_superuser:
         query = query.where(models.Project.user_id == current_user.id)

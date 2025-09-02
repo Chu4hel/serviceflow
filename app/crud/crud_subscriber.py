@@ -26,16 +26,17 @@ async def get_subscriber(
 
 
 async def get_subscriber_by_email_and_project(
-        db: AsyncSession, project_id: int, email: str, current_user: models.User
+        db: AsyncSession, project_id: int, email: str, current_user: Optional[models.User] = None
 ) -> Optional[models.Subscriber]:
     """
-    Ищет подписчика по email и ID проекта с проверкой прав.
+    Ищет подписчика по email и ID проекта.
+    Если передан current_user, проверяет права доступа.
     """
     query = select(models.Subscriber).where(
         models.Subscriber.project_id == project_id, models.Subscriber.email == email
     )
 
-    if not current_user.is_superuser:
+    if current_user and not current_user.is_superuser:
         query = query.join(models.Project).where(models.Project.user_id == current_user.id)
 
     result = await db.execute(query)
