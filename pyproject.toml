@@ -3,7 +3,7 @@ name = "serviceflow-api"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Chu4hel",email = "106600877+Chu4hel@users.noreply.github.com"}
+    { name = "Chu4hel", email = "106600877+Chu4hel@users.noreply.github.com" }
 ]
 readme = "README.md"
 requires-python = ">=3.13"
@@ -18,10 +18,17 @@ dependencies = [
     "asyncpg (>=0.30.0,<0.31.0)",
     "psycopg2 (>=2.9.10,<3.0.0)",
     "greenlet (>=3.2.4,<4.0.0)",
-    "python-multipart (>=0.0.20,<0.0.21)"
+    "python-multipart (>=0.0.20,<0.0.21)",
+    "pytest (>=8.2.2,<9.0.0)",
+    "pytest-asyncio (>=0.23.7,<0.24.0)",
+    "httpx (>=0.27.0,<0.28.0)"
 ]
 
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
