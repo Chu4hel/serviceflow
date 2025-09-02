@@ -6,6 +6,7 @@ from typing import List, Optional
 from datetime import datetime
 from decimal import Decimal
 
+
 # ==============================================================================
 # Схемы для Пользователя (User)
 # ==============================================================================
@@ -14,14 +15,18 @@ class UserBase(BaseModel):
     name: str
     email: str
 
+
 class UserCreate(UserBase):
     password: str
 
+
 class User(UserBase):
     id: int
+    is_superuser: bool
     created_at: datetime
     updated_at: datetime
     model_config = ConfigDict(from_attributes=True)
+
 
 # ==============================================================================
 # Схемы для Услуги (Service)
@@ -33,8 +38,10 @@ class ServiceBase(BaseModel):
     duration_minutes: int
     price: Decimal
 
+
 class ServiceCreate(ServiceBase):
     pass
+
 
 class Service(ServiceBase):
     id: int
@@ -42,6 +49,7 @@ class Service(ServiceBase):
     created_at: datetime
     updated_at: datetime
     model_config = ConfigDict(from_attributes=True)
+
 
 # ==============================================================================
 # Схемы для Бронирования (Booking)
@@ -57,16 +65,19 @@ class BookingBase(BaseModel):
     description: Optional[str] = None
     notes: Optional[str] = None
 
+
 class BookingCreate(BookingBase):
     pass
+
 
 class Booking(BookingBase):
     id: int
     project_id: int
     created_at: datetime
     updated_at: datetime
-    service: Service # Вложенная схема для деталей услуги
+    service: Service  # Вложенная схема для деталей услуги
     model_config = ConfigDict(from_attributes=True)
+
 
 # ==============================================================================
 # Схемы для Подписчика (Subscriber)
@@ -75,8 +86,10 @@ class Booking(BookingBase):
 class SubscriberBase(BaseModel):
     email: str
 
+
 class SubscriberCreate(SubscriberBase):
     pass
+
 
 class Subscriber(SubscriberBase):
     id: int
@@ -85,6 +98,7 @@ class Subscriber(SubscriberBase):
     updated_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
+
 # ==============================================================================
 # Схемы для Проекта (Project)
 # ==============================================================================
@@ -92,8 +106,10 @@ class Subscriber(SubscriberBase):
 class ProjectBase(BaseModel):
     name: str
 
+
 class ProjectCreate(ProjectBase):
     pass
+
 
 class Project(ProjectBase):
     model_config = ConfigDict(from_attributes=True, title="Проект (модель ответа)")
@@ -102,11 +118,12 @@ class Project(ProjectBase):
     api_key: str
     created_at: datetime
     updated_at: datetime
-    user: User # Вложенная схема для деталей пользователя
+    user: User  # Вложенная схема для деталей пользователя
     services: List[Service] = []
     bookings: List[Booking] = []
     subscribers: List[Subscriber] = []
     model_config = ConfigDict(from_attributes=True)
+
 
 # Обновляем ссылки для вложенных схем, которые ссылаются друг на друга
 # Это нужно, если есть циклические зависимости

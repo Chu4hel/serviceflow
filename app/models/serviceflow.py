@@ -2,7 +2,7 @@
 Модели базы данных SQLAlchemy для проекта ServiceFlow.
 """
 from sqlalchemy import (
-    Column, Integer, String, Text, DateTime, ForeignKey, func, Numeric, UniqueConstraint
+    Column, Integer, String, Text, DateTime, ForeignKey, func, Numeric, UniqueConstraint, Boolean
 )
 from sqlalchemy.orm import relationship
 
@@ -17,6 +17,7 @@ class User(Base):
     name = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
+    is_superuser = Column(Boolean, default=False)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
