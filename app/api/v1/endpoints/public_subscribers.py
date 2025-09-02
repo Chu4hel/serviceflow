@@ -29,25 +29,20 @@ router = APIRouter()
     },
 )
 async def create_public_subscriber(
-        subscriber: schemas.SubscriberCreate,
-        project: Project = Depends(get_project_by_api_key),
-        db: AsyncSession = Depends(get_db),
-        allow_duplicates: bool = False,
+    subscriber: schemas.SubscriberCreate,
+    project: Project = Depends(get_project_by_api_key),
+    db: AsyncSession = Depends(get_db),
 ):
     """
-    Создает нового подписчика или возвращает существующего.
-
-    - По умолчанию (`allow_duplicates=False`), если подписчик с таким `email` уже существует в проекте, возвращаются его данные со статусом 200.
-    - Если подписчик не найден, он создается и возвращается со статусом 201.
-    - Если `allow_duplicates=True`, система всегда создает нового подписчика.
+    Создает нового подписчика или возвращает существующего, если email уже есть в проекте.
+    Из-за уникального ограничения в БД, создание дубликатов невозможно.
     """
-    if not allow_duplicates:
-        existing_subscriber = await crud_subscriber.get_subscriber_by_email_and_project(
-            db, project_id=project.id, email=subscriber.email
+    existing_subscriber = await crud_subscriber.get_subscriber_by_email_and_project(
+        db, project_id=project.id, email=subscriber.email
+    )
+    if existing_subscriber:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK, content=jsonable_encoder(existing_subscriber)
         )
-        if existing_subscriber:
-            return JSONResponse(
-                status_code=status.HTTP_200_OK, content=jsonable_encoder(existing_subscriber)
-            )
 
     return await crud_subscriber.create_subscriber(db=db, project_id=project.id, subscriber=subscriber)
