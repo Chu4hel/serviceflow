@@ -17,7 +17,8 @@ from app.api.v1.endpoints import (
     public_subscribers,
     manage_projects,
     manage_services,
-    manage_bookings
+    manage_bookings,
+    manage_subscribers
 )
 
 # Метаданные для тегов Swagger
@@ -28,6 +29,7 @@ tags_metadata = [
     {"name": "Management API - Projects", "description": "Управление проектами (требует JWT)"},
     {"name": "Management API - Services", "description": "Управление услугами (требует JWT)"},
     {"name": "Management API - Bookings", "description": "Управление бронированиями (требует JWT)"},
+    {"name": "Management API - Subscribers", "description": "Управление подписчиками (требует JWT)"},
 ]
 
 app = FastAPI(
@@ -36,8 +38,9 @@ app = FastAPI(
     version="1.0.0",
     openapi_tags=tags_metadata,
     docs_url=None,  # Отключаем стандартный docs
-    redoc_url=None, # Отключаем redoc
+    redoc_url=None,  # Отключаем redoc
 )
+
 
 # Middleware для логирования HTTP-запросов
 @app.middleware("http")
@@ -50,6 +53,7 @@ async def log_requests(request: Request, call_next):
     logging.info(f"Ответ: {response.status_code} (обработано за {process_time:.2f}с)")
     return response
 
+
 # Словарь для перевода стандартных ошибок Pydantic
 TRANSLATION_MAP = {
     "Field required": "Это поле обязательно",
@@ -58,11 +62,12 @@ TRANSLATION_MAP = {
     "Input should be a valid email address": "Введите корректный email адрес",
 }
 
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     new_errors = []
     for error in exc.errors():
-        new_msg = TRANSLATION_MAP.get(error["msg"], error["msg"]) # Переводим, если есть в словаре
+        new_msg = TRANSLATION_MAP.get(error["msg"], error["msg"])  # Переводим, если есть в словаре
         new_errors.append({
             "loc": error["loc"],
             "msg": new_msg,
@@ -72,6 +77,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=422,
         content={"detail": new_errors},
     )
+
 
 # Роутер для аутентификации
 app.include_router(login.router, tags=["Auth"])
@@ -86,11 +92,13 @@ app.include_router(users.router, prefix="/manage", tags=["Management API - Users
 app.include_router(manage_projects.router, prefix="/manage", tags=["Management API - Projects"])
 app.include_router(manage_services.router, prefix="/manage", tags=["Management API - Services"])
 app.include_router(manage_bookings.router, prefix="/manage", tags=["Management API - Bookings"])
+app.include_router(manage_subscribers.router, prefix="/manage", tags=["Management API - Subscribers"])
 
 
 @app.get("/", summary="Root Endpoint")
 def read_root():
     return {"message": "Welcome to ServiceFlow API"}
+
 
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html_with_translation():
@@ -98,7 +106,7 @@ async def custom_swagger_ui_html_with_translation():
     default_html = get_swagger_ui_html(
         openapi_url=app.openapi_url,
         title=app.title + " - Swagger UI",
-        swagger_ui_parameters={"lang": "ru"} # Передаем параметр для базовой русификации
+        swagger_ui_parameters={"lang": "ru"}  # Передаем параметр для базовой русификации
     ).body.decode()
 
     # Наш JavaScript для перевода оставшихся частей
