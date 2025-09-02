@@ -8,7 +8,7 @@ from sqlalchemy.future import select
 from sqlalchemy import func
 
 from app.core.security import get_password_hash
-from app.models import serviceflow as models
+from app import models
 from app import schemas
 
 

@@ -2,7 +2,7 @@
 import pytest_asyncio
 from httpx import AsyncClient
 
-from app.models.serviceflow import User
+from app.models import User
 
 
 @pytest_asyncio.fixture(scope="function")

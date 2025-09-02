@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.dependencies import get_current_active_user
 from app.crud import crud_service, crud_project
 from app.db.session import get_db
-from app.models import serviceflow as models
+from app import models
 from app import schemas
 
 router = APIRouter()

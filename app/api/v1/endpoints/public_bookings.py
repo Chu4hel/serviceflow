@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.dependencies import get_project_by_api_key
 from app.crud import crud_booking
 from app.db.session import get_db
-from app.models.serviceflow import Project
+from app import models
 from app import schemas
 
 router = APIRouter()
@@ -30,7 +30,7 @@ router = APIRouter()
 )
 async def create_public_booking(
         booking: schemas.BookingCreate,
-        project: Project = Depends(get_project_by_api_key),
+        project: models.Project = Depends(get_project_by_api_key),
         db: AsyncSession = Depends(get_db),
         allow_duplicates: bool = False,
 ):

@@ -13,7 +13,7 @@ from app.core.config import settings
 from app.core import security
 from app.crud import crud_user, crud_project
 from app.db.session import get_db
-from app.models import serviceflow as models
+from app import models
 from app import schemas
 
 reusable_oauth2 = OAuth2PasswordBearer(

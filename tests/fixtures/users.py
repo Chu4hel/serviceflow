@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_password_hash
 from app.main import app
-from app.models import serviceflow as models
+from app import models
 
 
 @pytest.fixture(scope="session")
