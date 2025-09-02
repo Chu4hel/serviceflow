@@ -17,16 +17,17 @@ class BookingService:
         self.project_service = ProjectService(db)
 
     async def get_booking_for_user(
-            self, booking_id: int, current_user: models.User
+            self, booking_id: int, project_id: int, current_user: models.User
     ) -> Optional[models.Booking]:
-        """Получает бронирование по ID, проверяя права доступа через проект."""
-        booking = await crud_booking.get_booking(self.db, booking_id=booking_id)
-        if not booking:
-            return None
-        project = await self.project_service.get_project_for_user(project_id=booking.project_id,
-                                                                  current_user=current_user)
+        """Получает бронирование по ID, проверяя права доступа и принадлежность к проекту."""
+        project = await self.project_service.get_project_for_user(project_id=project_id, current_user=current_user)
         if not project:
             return None
+
+        booking = await crud_booking.get_booking(self.db, booking_id=booking_id)
+        if not booking or booking.project_id != project.id:
+            return None
+
         return booking
 
     async def get_bookings_for_user(
@@ -51,17 +52,19 @@ class BookingService:
         return await crud_booking.create_booking(self.db, project_id=project_id, booking=booking_in)
 
     async def update_booking_for_user(
-            self, booking_id: int, booking_in: schemas.BookingUpdate, current_user: models.User
+            self, booking_id: int, project_id: int, booking_in: schemas.BookingUpdate, current_user: models.User
     ) -> Optional[models.Booking]:
         """Обновляет бронирование, проверяя права доступа."""
-        booking = await self.get_booking_for_user(booking_id=booking_id, current_user=current_user)
+        booking = await self.get_booking_for_user(booking_id=booking_id, project_id=project_id,
+                                                  current_user=current_user)
         if not booking:
             return None
         return await crud_booking.update_booking(self.db, db_obj=booking, obj_in=booking_in)
 
-    async def delete_booking_for_user(self, booking_id: int, current_user: models.User) -> bool:
+    async def delete_booking_for_user(self, booking_id: int, project_id: int, current_user: models.User) -> bool:
         """Удаляет бронирование, проверяя права доступа."""
-        booking = await self.get_booking_for_user(booking_id=booking_id, current_user=current_user)
+        booking = await self.get_booking_for_user(booking_id=booking_id, project_id=project_id,
+                                                  current_user=current_user)
         if not booking:
             return False
         await crud_booking.delete_booking(self.db, db_obj=booking)

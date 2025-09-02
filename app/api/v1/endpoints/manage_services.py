@@ -63,7 +63,7 @@ async def read_project_services(
     services = await service_service.get_services_for_user(
         project_id=project_id, current_user=current_user, skip=skip, limit=limit
     )
-    if services is None:  # Сервис возвращает None если проекта нет или нет доступа
+    if services is None:
         raise HTTPException(status_code=404, detail="Проект не найден или доступ запрещен")
     return services
 
@@ -77,13 +77,9 @@ async def read_project_service(
         current_user: models.User = Depends(get_current_active_user),
 ):
     service_service = ServiceService(db)
-    service = await service_service.get_service_for_user(service_id=service_id, current_user=current_user)
-    if not service or service.project_id != project_id:
-        raise HTTPException(status_code=404, detail="Услуга не найдена или не принадлежит указанному проекту")
-
-    return service
-    service_service = ServiceService(db)
-    service = await service_service.get_service_for_user(service_id=service_id, current_user=current_user)
+    service = await service_service.get_service_for_user(
+        service_id=service_id, project_id=project_id, current_user=current_user
+    )
     if not service:
         raise HTTPException(status_code=404, detail="Услуга не найдена или не принадлежит указанному проекту")
     return service
@@ -99,7 +95,7 @@ async def update_project_service(
 ):
     service_service = ServiceService(db)
     service = await service_service.update_service_for_user(
-        service_id=service_id, service_in=service_in, current_user=current_user
+        service_id=service_id, project_id=project_id, service_in=service_in, current_user=current_user
     )
     if not service:
         raise HTTPException(status_code=404, detail="Услуга не найдена или не принадлежит указанному проекту")
@@ -109,12 +105,15 @@ async def update_project_service(
 @router.delete("/projects/{project_id}/services/{service_id}", status_code=status.HTTP_204_NO_CONTENT,
                summary="Удаление услуги")
 async def delete_project_service(
+        project_id: int,
         service_id: int,
         db: AsyncSession = Depends(get_db),
         current_user: models.User = Depends(get_current_active_user),
 ):
     service_service = ServiceService(db)
-    success = await service_service.delete_service_for_user(service_id=service_id, current_user=current_user)
+    success = await service_service.delete_service_for_user(
+        service_id=service_id, project_id=project_id, current_user=current_user
+    )
     if not success:
         raise HTTPException(status_code=404, detail="Услуга не найдена или не принадлежит указанному проекту")
     return Response(status_code=status.HTTP_204_NO_CONTENT)

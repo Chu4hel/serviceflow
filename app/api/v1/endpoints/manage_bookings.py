@@ -35,12 +35,15 @@ async def read_project_bookings(
 @router.get("/projects/{project_id}/bookings/{booking_id}", response_model=schemas.Booking,
             summary="Получение бронирования по ID")
 async def read_project_booking(
+        project_id: int,
         booking_id: int,
         db: AsyncSession = Depends(get_db),
         current_user: models.User = Depends(get_current_active_user),
 ):
     booking_service = BookingService(db)
-    booking = await booking_service.get_booking_for_user(booking_id=booking_id, current_user=current_user)
+    booking = await booking_service.get_booking_for_user(
+        booking_id=booking_id, project_id=project_id, current_user=current_user
+    )
     if not booking:
         raise HTTPException(status_code=404, detail="Бронирование не найдено или не принадлежит указанному проекту")
     return booking
@@ -57,7 +60,7 @@ async def update_project_booking(
 ):
     booking_service = BookingService(db)
     booking = await booking_service.update_booking_for_user(
-        booking_id=booking_id, booking_in=booking_in, current_user=current_user
+        booking_id=booking_id, project_id=project_id, booking_in=booking_in, current_user=current_user
     )
     if not booking:
         raise HTTPException(status_code=404, detail="Бронирование не найдено или не принадлежит указанному проекту")
@@ -73,12 +76,9 @@ async def delete_project_booking(
         current_user: models.User = Depends(get_current_active_user),
 ):
     booking_service = BookingService(db)
-    # Сначала проверяем, что бронирование вообще существует и принадлежит проекту
-    booking = await booking_service.get_booking_for_user(booking_id=booking_id, current_user=current_user)
-    if not booking or booking.project_id != project_id:
-        raise HTTPException(status_code=404, detail="Бронирование не найдено или не принадлежит указанному проекту")
-
-    success = await booking_service.delete_booking_for_user(booking_id=booking_id, current_user=current_user)
+    success = await booking_service.delete_booking_for_user(
+        booking_id=booking_id, project_id=project_id, current_user=current_user
+    )
     if not success:
         raise HTTPException(status_code=404, detail="Бронирование не найдено или не принадлежит указанному проекту")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
