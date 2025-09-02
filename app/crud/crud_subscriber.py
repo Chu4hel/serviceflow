@@ -17,7 +17,16 @@ async def get_subscriber(db: AsyncSession, subscriber_id: int) -> Optional[model
     return result.scalars().first()
 
 
-async def get_subscribers(db: AsyncSession, project_id: int, skip: int = 0, limit: int = 100) -> List[models.Subscriber]:
+async def get_subscriber_by_email_and_project(db: AsyncSession, project_id: int, email: str) -> Optional[
+    models.Subscriber]:
+    result = await db.execute(
+        select(models.Subscriber).where(models.Subscriber.project_id == project_id, models.Subscriber.email == email)
+    )
+    return result.scalars().first()
+
+
+async def get_subscribers(db: AsyncSession, project_id: int, skip: int = 0, limit: int = 100) -> List[
+    models.Subscriber]:
     result = await db.execute(
         select(models.Subscriber)
         .where(models.Subscriber.project_id == project_id)
@@ -27,7 +36,8 @@ async def get_subscribers(db: AsyncSession, project_id: int, skip: int = 0, limi
     return result.scalars().all()
 
 
-async def create_subscriber(db: AsyncSession, project_id: int, subscriber: schemas.SubscriberCreate) -> models.Subscriber:
+async def create_subscriber(db: AsyncSession, project_id: int,
+                            subscriber: schemas.SubscriberCreate) -> models.Subscriber:
     db_subscriber = models.Subscriber(
         **subscriber.model_dump(),
         project_id=project_id

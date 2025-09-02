@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from app.models import serviceflow as models
 from app.schemas import serviceflow as schemas
@@ -12,7 +13,19 @@ from app.schemas import serviceflow as schemas
 
 async def get_service(db: AsyncSession, service_id: int) -> Optional[models.Service]:
     result = await db.execute(
-        select(models.Service).where(models.Service.id == service_id)
+        select(models.Service)
+        .options(
+            selectinload(models.Service.project),
+            selectinload(models.Service.bookings)
+        )
+        .where(models.Service.id == service_id)
+    )
+    return result.scalars().first()
+
+
+async def get_service_by_name_and_project(db: AsyncSession, project_id: int, name: str) -> Optional[models.Service]:
+    result = await db.execute(
+        select(models.Service).where(models.Service.project_id == project_id, models.Service.name == name)
     )
     return result.scalars().first()
 

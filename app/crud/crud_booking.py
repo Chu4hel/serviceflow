@@ -1,6 +1,7 @@
 """
 CRUD-операции для модели Booking.
 """
+from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +18,20 @@ async def get_booking(db: AsyncSession, booking_id: int) -> Optional[models.Book
         select(models.Booking)
         .options(selectinload(models.Booking.service))
         .where(models.Booking.id == booking_id)
+    )
+    return result.scalars().first()
+
+
+async def get_booking_by_service_and_time(
+        db: AsyncSession, project_id: int, service_id: int, booking_time: datetime
+) -> Optional[models.Booking]:
+    """Ищет бронирование по ID сервиса и времени в рамках одного проекта."""
+    result = await db.execute(
+        select(models.Booking).where(
+            models.Booking.project_id == project_id,
+            models.Booking.service_id == service_id,
+            models.Booking.booking_time == booking_time
+        )
     )
     return result.scalars().first()
 
@@ -41,5 +56,5 @@ async def create_booking(db: AsyncSession, project_id: int, booking: schemas.Boo
     )
     db.add(db_booking)
     await db.commit()
-    await db.refresh(db_booking, ["service"]) # Обновляем, чтобы подгрузить связь
+    await db.refresh(db_booking, ["service"])  # Обновляем, чтобы подгрузить связь
     return db_booking
