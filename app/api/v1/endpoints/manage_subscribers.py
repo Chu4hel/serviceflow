@@ -3,7 +3,7 @@ Management API: Эндпоинты для управления подписчи�
 Требуют JWT аутентификации.
 """
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -62,4 +62,4 @@ async def delete_project_subscriber(
         raise HTTPException(status_code=404, detail="Подписчик не найден или не принадлежит указанному проекту")
 
     await crud_subscriber.delete_subscriber(db=db, db_obj=subscriber)
-    return JSONResponse(status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

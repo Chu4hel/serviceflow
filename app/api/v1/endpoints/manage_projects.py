@@ -3,7 +3,7 @@ Management API: Эндпоинты для управления проектам�
 Требуют JWT аутентификации.
 """
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -99,4 +99,4 @@ async def delete_user_project(
     if not project:
         raise HTTPException(status_code=404, detail="Проект не найден или у вас нет прав доступа")
     await crud_project.delete_project(db=db, db_obj=project)
-    return JSONResponse(status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

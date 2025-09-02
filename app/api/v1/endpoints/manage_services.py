@@ -4,7 +4,7 @@ Management API: Эндпоинты для управления услугами.
 """
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -66,7 +66,8 @@ async def read_project_services(
         limit: int = 100
 ):
     # crud_service.get_services теперь сам проверяет права доступа
-    services = await crud_service.get_services(db, project_id=project_id, current_user=current_user, skip=skip, limit=limit)
+    services = await crud_service.get_services(db, project_id=project_id, current_user=current_user, skip=skip,
+                                               limit=limit)
     # Дополнительная проверка, если get_services вернет пустой список, потому что проекта нет
     if not services:
         project = await crud_project.get_project(db, project_id=project_id, current_user=current_user)
@@ -75,27 +76,28 @@ async def read_project_services(
     return services
 
 
-@router.get("/projects/{project_id}/services/{service_id}", response_model=schemas.Service, summary="Получение услуги по ID")
+@router.get("/projects/{project_id}/services/{service_id}", response_model=schemas.Service,
+            summary="Получение услуги по ID")
 async def read_project_service(
-    project_id: int,
-    service_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: models.User = Depends(get_current_active_user),
+        project_id: int,
+        service_id: int,
+        db: AsyncSession = Depends(get_db),
+        current_user: models.User = Depends(get_current_active_user),
 ):
     service = await crud_service.get_service(db, service_id=service_id, current_user=current_user)
     if not service or service.project_id != project_id:
         raise HTTPException(status_code=404, detail="Услуга не найдена или не принадлежит указанному проекту")
-        
+
     return service
 
 
 @router.put("/projects/{project_id}/services/{service_id}", response_model=schemas.Service, summary="Обновление услуги")
 async def update_project_service(
-    project_id: int,
-    service_id: int,
-    service_in: schemas.ServiceUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_user: models.User = Depends(get_current_active_user),
+        project_id: int,
+        service_id: int,
+        service_in: schemas.ServiceUpdate,
+        db: AsyncSession = Depends(get_db),
+        current_user: models.User = Depends(get_current_active_user),
 ):
     service = await crud_service.get_service(db, service_id=service_id, current_user=current_user)
     if not service or service.project_id != project_id:
@@ -105,16 +107,17 @@ async def update_project_service(
     return updated_service
 
 
-@router.delete("/projects/{project_id}/services/{service_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Удаление услуги")
+@router.delete("/projects/{project_id}/services/{service_id}", status_code=status.HTTP_204_NO_CONTENT,
+               summary="Удаление услуги")
 async def delete_project_service(
-    project_id: int,
-    service_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: models.User = Depends(get_current_active_user),
+        project_id: int,
+        service_id: int,
+        db: AsyncSession = Depends(get_db),
+        current_user: models.User = Depends(get_current_active_user),
 ):
     service = await crud_service.get_service(db, service_id=service_id, current_user=current_user)
     if not service or service.project_id != project_id:
         raise HTTPException(status_code=404, detail="Услуга не найдена или не принадлежит указанному проекту")
 
     await crud_service.delete_service(db=db, db_obj=service)
-    return JSONResponse(status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

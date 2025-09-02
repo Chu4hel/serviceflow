@@ -3,7 +3,7 @@ Management API: Эндпоинты для управления брониров�
 Требуют JWT аутентификации.
 """
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -82,4 +82,4 @@ async def delete_project_booking(
         raise HTTPException(status_code=404, detail="Бронирование не найдено или не принадлежит указанному проекту")
 
     await crud_booking.delete_booking(db=db, db_obj=booking)
-    return JSONResponse(status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
