@@ -18,8 +18,17 @@ async def get_project(db: AsyncSession, project_id: int) -> Optional[models.Proj
         .options(
             selectinload(models.Project.user),
             selectinload(models.Project.services),
+            selectinload(models.Project.bookings),
+            selectinload(models.Project.subscribers)
         )
         .where(models.Project.id == project_id)
+    )
+    return result.scalars().first()
+
+
+async def get_project_by_name_and_user(db: AsyncSession, user_id: int, name: str) -> Optional[models.Project]:
+    result = await db.execute(
+        select(models.Project).where(models.Project.user_id == user_id, models.Project.name == name)
     )
     return result.scalars().first()
 
