@@ -20,41 +20,15 @@ reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl="/auth/login"
 )
 
-reusable_oauth2_optional = OAuth2PasswordBearer(
+reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl="/auth/login", auto_error=False
 )
 
 
-async def get_current_user(
+async def get_current_active_user(
         db: AsyncSession = Depends(get_db),
         token: str = Depends(reusable_oauth2)
-) -> schemas.User:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Не удалось проверить учетные данные",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
-        )
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-
-    user = await crud_user.get_user(db, user_id=int(user_id))
-    if user is None:
-        raise credentials_exception
-    # Возвращаем именно Pydantic-схему, а не модель SQLAlchemy
-    return schemas.User.model_validate(user)
-
-
-async def get_current_user_optional(
-        db: AsyncSession = Depends(get_db),
-        token: Optional[str] = Depends(reusable_oauth2_optional)
-) -> Optional[schemas.User]:
+) -> Optional[models.User]:
     if not token:
         return None
 
@@ -76,12 +50,28 @@ async def get_current_user_optional(
     user = await crud_user.get_user(db, user_id=int(user_id))
     if user is None:
         raise credentials_exception
-    return schemas.User.model_validate(user)
+    return user
+
+
+async def get_current_user(
+        current_user: models.User = Depends(get_current_active_user)
+) -> schemas.User:
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Требуется аутентификация")
+    return schemas.User.model_validate(current_user)
+
+
+async def get_current_user_optional(
+        current_user: Optional[models.User] = Depends(get_current_active_user)
+) -> Optional[schemas.User]:
+    if not current_user:
+        return None
+    return schemas.User.model_validate(current_user)
 
 
 async def check_if_first_user_or_superuser(
         db: AsyncSession = Depends(get_db),
-        current_user: Optional[schemas.User] = Depends(get_current_user_optional)
+        current_user: Optional[models.User] = Depends(get_current_active_user)
 ):
     result = await db.execute(select(func.count()).select_from(models.User))
     user_count = result.scalar_one()
@@ -116,9 +106,9 @@ async def get_project_by_api_key(
 
 
 async def get_current_superuser(
-        current_user: schemas.User = Depends(get_current_user),
-) -> schemas.User:
-    if not current_user.is_superuser:
+        current_user: models.User = Depends(get_current_active_user),
+) -> models.User:
+    if not current_user or not current_user.is_superuser:
         raise HTTPException(
             status_code=403,
             detail="Недостаточно прав для выполнения этого действия"
