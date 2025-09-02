@@ -20,6 +20,11 @@ class UserCreate(UserBase):
     password: str
 
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    password: Optional[str] = None
+
+
 class User(UserBase):
     id: int
     is_superuser: bool
@@ -41,6 +46,13 @@ class ServiceBase(BaseModel):
 
 class ServiceCreate(ServiceBase):
     pass
+
+
+class ServiceUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    price: Optional[Decimal] = None
 
 
 class Service(ServiceBase):
@@ -68,6 +80,16 @@ class BookingBase(BaseModel):
 
 class BookingCreate(BookingBase):
     pass
+
+
+class BookingUpdate(BaseModel):
+    booking_time: Optional[datetime] = None
+    client_name: Optional[str] = None
+    client_email: Optional[str] = None
+    client_phone: Optional[str] = None
+    status: Optional[str] = None
+    description: Optional[str] = None
+    notes: Optional[str] = None
 
 
 class Booking(BookingBase):
@@ -109,6 +131,10 @@ class ProjectBase(BaseModel):
 
 class ProjectCreate(ProjectBase):
     pass
+
+
+class ProjectUpdate(BaseModel):
+    name: Optional[str] = None
 
 
 class Project(ProjectBase):
