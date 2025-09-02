@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.models import serviceflow as models
-from app.schemas import serviceflow as schemas
+from app import schemas
 
 
 async def get_subscriber(

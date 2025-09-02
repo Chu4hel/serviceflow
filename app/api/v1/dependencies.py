@@ -14,7 +14,7 @@ from app.core import security
 from app.crud import crud_user, crud_project
 from app.db.session import get_db
 from app.models import serviceflow as models
-from app.schemas import serviceflow as schemas
+from app import schemas
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl="/auth/login"

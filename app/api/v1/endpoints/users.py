@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.dependencies import check_if_first_user_or_superuser
 from app.crud import crud_user
 from app.db.session import get_db
-from app.schemas import serviceflow as schemas
+from app import schemas
 
 router = APIRouter()
 

@@ -13,7 +13,7 @@ from app.api.v1.dependencies import get_current_active_user
 from app.crud import crud_service, crud_project
 from app.db.session import get_db
 from app.models import serviceflow as models
-from app.schemas import serviceflow as schemas
+from app import schemas
 
 router = APIRouter()
 

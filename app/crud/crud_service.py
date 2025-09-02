@@ -8,7 +8,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 from app.models import serviceflow as models
-from app.schemas import serviceflow as schemas
+from app import schemas
 
 
 async def get_service(

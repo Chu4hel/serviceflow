@@ -11,7 +11,7 @@ from app.api.v1.dependencies import get_project_by_api_key
 from app.crud import crud_booking
 from app.db.session import get_db
 from app.models.serviceflow import Project
-from app.schemas import serviceflow as schemas
+from app import schemas
 
 router = APIRouter()
 

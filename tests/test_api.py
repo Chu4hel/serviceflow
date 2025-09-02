@@ -6,7 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud import crud_user, crud_project, crud_service
-from app.schemas import serviceflow as schemas
+from app import schemas
 
 pytestmark = pytest.mark.asyncio
 
@@ -29,6 +29,7 @@ async def create_project(client: AsyncClient, token: str, project_data: dict):
         headers={"Authorization": f"Bearer {token}"}
     )
     return response.json()
+
 
 # ==============================================================================
 # Тесты для Услуг (Services)
@@ -59,10 +60,11 @@ async def test_create_service_no_duplicates(client: AsyncClient, db_session: Asy
         json=service_data,
         headers={"Authorization": f"Bearer {token}"}
     )
-    assert response2.status_code == 200 # Ожидаем 200 OK
+    assert response2.status_code == 200  # Ожидаем 200 OK
     existing_service = response2.json()
     assert existing_service["id"] == created_service["id"]
     assert existing_service["name"] == service_data["name"]
+
 
 async def test_create_service_with_duplicates_allowed(client: AsyncClient, db_session: AsyncSession):
     """Тест: можно создать дубликат услуги с флагом allow_duplicates=True."""
@@ -88,7 +90,7 @@ async def test_create_service_with_duplicates_allowed(client: AsyncClient, db_se
         json=service_data,
         headers={"Authorization": f"Bearer {token}"}
     )
-    assert response2.status_code == 201 # Ожидаем 201 Created
+    assert response2.status_code == 201  # Ожидаем 201 Created
     created_service_2 = response2.json()
     assert created_service_2["id"] != created_service_1["id"]
     assert created_service_2["name"] == service_data["name"]
@@ -136,6 +138,7 @@ async def test_create_booking_no_duplicates(client: AsyncClient, db_session: Asy
     assert response2.status_code == 200
     existing_booking = response2.json()
     assert existing_booking["id"] == created_booking["id"]
+
 
 async def test_create_booking_with_duplicates_allowed(client: AsyncClient, db_session: AsyncSession):
     """Тест: можно создать дубликат бронирования с флагом allow_duplicates=True."""

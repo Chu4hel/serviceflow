@@ -9,7 +9,7 @@ from sqlalchemy import func
 
 from app.core.security import get_password_hash
 from app.models import serviceflow as models
-from app.schemas import serviceflow as schemas
+from app import schemas
 
 
 async def get_user(db: AsyncSession, user_id: int) -> Optional[models.User]:
