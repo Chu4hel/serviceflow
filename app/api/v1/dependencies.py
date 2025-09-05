@@ -17,11 +17,8 @@ from app import models
 from app import schemas
 
 reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl="/auth/login"
-)
-
-reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl="/auth/login", auto_error=False
+    tokenUrl="auth/login",
+    auto_error=False
 )
 
 
