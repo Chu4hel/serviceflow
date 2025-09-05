@@ -128,21 +128,36 @@ async def custom_swagger_ui_html_with_translation():
                     'Download': 'Скачать',
                     'Example': 'Пример',
                     'Example value': 'Пример значения'
+                    // Добавьте другие переводы по необходимости
+                };
+
+                const translateNode = (node) => {
+                    // Мы работаем только с текстовыми узлами
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const originalText = node.nodeValue.trim();
+                        if (translations[originalText]) {
+                            node.nodeValue = translations[originalText];
+                        }
+                    } 
+                    // Рекурсивно обходим все дочерние узлы
+                    else if (node.childNodes && node.childNodes.length > 0) {
+                        node.childNodes.forEach(child => translateNode(child));
+                    }
                 };
 
                 const observer = new MutationObserver((mutations, obs) => {
-                    document.querySelectorAll("h2, h3, h4, span, button, label, p, td, th, div").forEach(el => {
-                        const originalText = el.textContent.trim();
-                        if (translations[originalText]) {
-                            el.textContent = translations[originalText];
-                        }
-                    });
+                    // Для каждой мутации мы запускаем перевод всего документа
+                    translateNode(document.body);
                 });
 
+                // Начинаем наблюдение
                 observer.observe(document.body, {
                     childList: true,
                     subtree: true
                 });
+
+                // Первичный перевод на случай, если что-то уже отрендерилось
+                translateNode(document.body);
             });
         </script>
     '''
