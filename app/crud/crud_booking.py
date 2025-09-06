@@ -73,8 +73,11 @@ async def update_booking(
         setattr(db_obj, field, value)
     db.add(db_obj)
     await db.commit()
-    await db.refresh(db_obj, ["service"])
-    return db_obj
+
+    # Вместо refresh, делаем полноценный get, чтобы гарантированно получить
+    # объект со всеми обновленными полями (включая updated_at от onupdate)
+    updated_booking = await get_booking(db, booking_id=db_obj.id)
+    return updated_booking
 
 
 async def delete_booking(db: AsyncSession, db_obj: models.Booking):
