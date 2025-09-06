@@ -68,7 +68,7 @@ async def update_booking(
         setattr(db_obj, field, value)
     db.add(db_obj)
     await db.commit()
-    await db.refresh(db_obj)
+    await db.refresh(db_obj, ["service"])
     return db_obj
 
 
