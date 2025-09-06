@@ -69,8 +69,8 @@ async def update_service(
         setattr(db_obj, field, value)
     db.add(db_obj)
     await db.commit()
-    await db.refresh(db_obj)
-    return db_obj
+    # Повторно извлекаем объект, чтобы гарантированно получить свежие данные
+    return await get_service(db, service_id=db_obj.id)
 
 
 async def delete_service(db: AsyncSession, db_obj: models.Service):

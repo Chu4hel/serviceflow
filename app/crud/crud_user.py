@@ -3,13 +3,13 @@ CRUD-операции для модели User.
 """
 from typing import List, Optional
 
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func
 
-from app.core.security import get_password_hash
 from app import models
 from app import schemas
+from app.core.security import get_password_hash
 
 
 async def get_user(db: AsyncSession, user_id: int) -> Optional[models.User]:
@@ -84,8 +84,8 @@ async def update_user(
 
     db.add(db_obj)
     await db.commit()
-    await db.refresh(db_obj)
-    return db_obj
+    # Повторно извлекаем объект, чтобы гарантированно получить свежие данные
+    return await get_user(db, user_id=db_obj.id)
 
 
 async def delete_user(db: AsyncSession, db_obj: models.User):

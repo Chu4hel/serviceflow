@@ -4,8 +4,8 @@ CRUD-операции для модели Project.
 Эти функции выполняют только базовые операции с базой данных (создание, чтение,
 обновление, удаление) и не содержат никакой бизнес-логики или проверок прав доступа.
 """
-from typing import List, Optional
 import uuid
+from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -96,8 +96,8 @@ async def update_project(
         setattr(db_obj, field, value)
     db.add(db_obj)
     await db.commit()
-    await db.refresh(db_obj)
-    return db_obj
+    # Повторно извлекаем объект, чтобы гарантированно получить свежие данные
+    return await get_project(db, project_id=db_obj.id)
 
 
 async def delete_project(db: AsyncSession, db_obj: models.Project):
