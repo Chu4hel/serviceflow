@@ -1,6 +1,6 @@
 [project]
 name = "serviceflow-api"
-version = "0.1.0"
+version = "1.0.0"
 description = ""
 authors = [
     { name = "Chu4hel", email = "106600877+Chu4hel@users.noreply.github.com" }
