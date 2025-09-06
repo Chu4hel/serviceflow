@@ -2,13 +2,13 @@
 Public API: Эндпоинты для работы с бронированиями (создание).
 Требуют X-API-KEY.
 """
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies import get_project_by_api_key
-from app.crud import crud_booking
+from app.crud import crud_booking, crud_service
 from app.db.session import get_db
 from app import models
 from app import schemas
@@ -41,6 +41,14 @@ async def create_public_booking(
     - Если бронь не найдена, она создается и возвращается со статусом 201.
     - Если `allow_duplicates=True`, система всегда создает новое бронирование.
     """
+    # Проверяем, что услуга принадлежит проекту
+    service = await crud_service.get_service(db, service_id=booking.service_id)
+    if not service or service.project_id != project.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Услуга с ID {booking.service_id} не найдена или не принадлежит данному проекту."
+        )
+
     if not allow_duplicates:
         existing_booking = await crud_booking.get_booking_by_service_and_time(
             db, project_id=project.id, service_id=booking.service_id, booking_time=booking.booking_time
