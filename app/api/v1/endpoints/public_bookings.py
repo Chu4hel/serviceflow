@@ -7,11 +7,11 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import models
+from app import schemas
 from app.api.v1.dependencies import get_project_by_api_key
 from app.crud import crud_booking, crud_service
 from app.db.session import get_db
-from app import models
-from app import schemas
 
 router = APIRouter()
 
@@ -41,6 +41,10 @@ async def create_public_booking(
     - Если бронь не найдена, она создается и возвращается со статусом 201.
     - Если `allow_duplicates=True`, система всегда создает новое бронирование.
     """
+    # Универсальная обработка datetime: преобразуем aware в naive
+    if booking.booking_time.tzinfo:
+        booking.booking_time = booking.booking_time.replace(tzinfo=None)
+
     # Проверяем, что услуга принадлежит проекту
     service = await crud_service.get_service(db, service_id=booking.service_id)
     if not service or service.project_id != project.id:
