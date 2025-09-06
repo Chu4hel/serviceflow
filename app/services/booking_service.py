@@ -3,12 +3,13 @@
 """
 from typing import List, Optional
 
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud import crud_booking
-from app.services.project_service import ProjectService
 from app import models
 from app import schemas
+from app.crud import crud_booking, crud_service
+from app.services.project_service import ProjectService
 
 
 class BookingService:
@@ -59,6 +60,18 @@ class BookingService:
                                                   current_user=current_user)
         if not booking:
             return None
+
+        # Проверяем, что если service_id меняется, то новая услуга принадлежит тому же проекту
+        update_data = booking_in.model_dump(exclude_unset=True)
+        if "service_id" in update_data:
+            new_service_id = update_data["service_id"]
+            service = await crud_service.get_service(self.db, service_id=new_service_id)
+            if not service or service.project_id != booking.project_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Услуга с ID {new_service_id} не найдена или не принадлежит проекту {booking.project_id}."
+                )
+
         return await crud_booking.update_booking(self.db, db_obj=booking, obj_in=booking_in)
 
     async def delete_booking_for_user(self, booking_id: int, project_id: int, current_user: models.User) -> bool:
