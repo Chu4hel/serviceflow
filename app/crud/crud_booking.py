@@ -64,6 +64,11 @@ async def update_booking(
 ) -> models.Booking:
     """Обновляет бронирование в базе данных."""
     update_data = obj_in.model_dump(exclude_unset=True)
+
+    # Универсальная обработка datetime: преобразуем aware в naive
+    if 'booking_time' in update_data and update_data['booking_time'] and update_data['booking_time'].tzinfo:
+        update_data['booking_time'] = update_data['booking_time'].replace(tzinfo=None)
+
     for field, value in update_data.items():
         setattr(db_obj, field, value)
     db.add(db_obj)
