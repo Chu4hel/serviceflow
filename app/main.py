@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.middleware.cors import CORSMiddleware
 
 # Импортируем роутеры
 from app.api.v1.endpoints import (
@@ -39,6 +40,24 @@ app = FastAPI(
     openapi_tags=tags_metadata,
     docs_url=None,  # Отключаем стандартный docs
     redoc_url=None,  # Отключаем redoc
+)
+
+# Настройка CORS
+origins = [
+    "https://www.xn----dtbikdcfar9bfeeq.xn--p1ai",
+    "https://xn----dtbikdcfar9bfeeq.xn--p1ai",
+    # Для локальной разработки
+    "http://localhost",
+    "http://localhost:8080",
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
